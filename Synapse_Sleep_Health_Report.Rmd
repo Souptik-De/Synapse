@@ -1,6 +1,6 @@
 ---
 title: "Understanding the Relationship Between Lifestyle Habits and Sleep Health"
-subtitle: "Team Synapse — Research Project Report"
+subtitle: Team Synapse — Research Project Report
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
@@ -10,7 +10,9 @@ output:
     theme: flatly
     highlight: tango
     number_sections: false
-    css: null
+  pdf_document:
+    toc: true
+    toc_depth: '3'
 ---
 
 ```{css, echo=FALSE}
@@ -61,8 +63,6 @@ hr { border-top: 2px solid #dde8f0; }
 
 **Project Title:** Understanding the Relationship Between Lifestyle Habits and Sleep Health
 
-<br>
-
 ### Team Members
 
 | Name            | Class Roll | Autonomy Roll |
@@ -72,14 +72,12 @@ hr { border-top: 2px solid #dde8f0; }
 | Sourab Kumar    | 2462034    | 12624019059   |
 | Prince Kumar    | 2462036    | 12624019034   |
 
-<br>
-
 ### Project Links
 
 |  |  |
-|----|----|
+|------------------------------------|------------------------------------|
 | **Dataset** | [Sleep Cycle and Productivity — Kaggle](https://www.kaggle.com/datasets/adilshamim8/sleep-cycle-and-productivity) |
-| **GitHub Repository** | <https://github.com/synapse-team/sleep-health-analysis> |
+| **GitHub Repository** | <https://github.com/Souptik-De/Synapse> |
 :::
 
 ------------------------------------------------------------------------
@@ -111,7 +109,7 @@ Download from: <https://cran.r-project.org/>
 ### Required Packages
 
 | Package | Purpose | Install command |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | `ggplot2` | All visualisations | `install.packages("ggplot2")` |
 | `dplyr` | Data wrangling (deeper analysis) | `install.packages("dplyr")` |
 | `tidyr` | Data reshaping | `install.packages("tidyr")` |
@@ -188,7 +186,7 @@ Insomnia   None   Sleep Apnea
 The script generates and saves **8 files**:
 
 | File                              | Description                             |
-|-----------------------------------|-----------------------------------------|
+|---------------------------------|---------------------------------------|
 | `plot1_disorder_distribution.png` | Bar chart of disorder counts            |
 | `plot2_stress_vs_sleep.png`       | Stress level vs quality & duration      |
 | `plot3_bmi_vs_disorder.png`       | BMI category vs disorder (stacked 100%) |
@@ -204,7 +202,14 @@ The script generates and saves **8 files**:
 
 ## 3.1 Setup and Data Loading
 
-```{r setup, message=FALSE, warning=FALSE}
+```{r setup, include=FALSE}
+# Tell knitr to use the .Rmd file's own directory as the working directory.
+# This is the same directory the Knit button uses, so placing the CSV there
+# will always work — no manual setwd() required.
+knitr::opts_knit$set(root.dir = normalizePath("."))
+```
+
+```{r load-packages, message=FALSE, warning=FALSE}
 # ── Install missing packages silently ─────────────────────
 pkgs <- c("ggplot2", "dplyr", "tidyr", "car", "nnet")
 invisible(lapply(pkgs, function(p) {
@@ -219,9 +224,39 @@ library(nnet)
 ```
 
 ```{r load-data, message=FALSE, warning=FALSE}
+# ── Locate the CSV ─────────────────────────────────────────
+# The Knit button always sets the working directory to the .Rmd folder,
+# so placing the CSV there is the simplest fix.
+# For interactive chunk-running, uncomment and edit one of these:
+# setwd("C:/Users/YourName/Downloads/SleepData")   # Windows
+# setwd("~/Downloads/SleepData")                   # Mac/Linux
+
+csv_path <- "Sleep_health_and_lifestyle_dataset.csv"
+
+# Fallback: try the folder where the .Rmd lives (works in RStudio interactive mode)
+if (!file.exists(csv_path) && requireNamespace("rstudioapi", quietly = TRUE)) {
+  rmd_dir  <- tryCatch(dirname(rstudioapi::getSourceEditorContext()$path),
+                       error = function(e) ".")
+  csv_path <- file.path(rmd_dir, "Sleep_health_and_lifestyle_dataset.csv")
+}
+
+if (!file.exists(csv_path)) {
+  stop(
+    "\nCSV not found. Fix one of these ways:\n",
+    "  1. Put Sleep_health_and_lifestyle_dataset.csv in the SAME folder as this .Rmd\n",
+    "  2. Uncomment and edit the setwd() line above\n",
+    "  3. Replace csv_path with the full path, e.g.:\n",
+    "     csv_path <- \'C:/Users/You/Downloads/Sleep_health_and_lifestyle_dataset.csv\'"
+  )
+}
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(car)
+library(nnet)
 # ── Load and clean ─────────────────────────────────────────
-df <- read.csv("Sleep_health_and_lifestyle_dataset.csv",
-               stringsAsFactors = FALSE)
+df <- read.csv(csv_path, stringsAsFactors = FALSE)
 names(df) <- gsub("\\.", "_", make.names(names(df)))
 
 df$Sleep_Disorder <- factor(df$Sleep_Disorder,
@@ -487,9 +522,9 @@ df_age <- df %>%
   pivot_longer(cols = c(Sleep_Duration, Quality_of_Sleep),
                names_to  = "Metric",
                values_to = "Value") %>%
-  mutate(Metric = recode(Metric,
-    "Sleep_Duration"   = "Sleep Duration (hrs)",
-    "Quality_of_Sleep" = "Sleep Quality (1-10)"
+  mutate(Metric = case_match(Metric,
+    "Sleep_Duration"   ~ "Sleep Duration (hrs)",
+    "Quality_of_Sleep" ~ "Sleep Quality (1-10)"
   ))
 
 ggplot(df_age, aes(x = Age, y = Value, color = Metric)) +
@@ -512,11 +547,11 @@ ggplot(df_age, aes(x = Age, y = Value, color = Metric)) +
 
 ```{r high-risk, fig.cap="Fig 10 — High-Risk Segment Proportions"}
 # Define high-risk: stress ≥ 7 AND (BMI == Overweight OR BMI == Obese)
-df$Risk_Segment <- with(df, case_when(
-  Stress_Level >= 7 & BMI_Category %in% c("Overweight", "Obese") ~ "High Risk",
-  Stress_Level >= 5 & BMI_Category %in% c("Overweight", "Obese") ~ "Moderate Risk",
+df$Risk_Segment <- dplyr::case_when(
+  df$Stress_Level >= 7 & df$BMI_Category %in% c("Overweight", "Obese") ~ "High Risk",
+  df$Stress_Level >= 5 & df$BMI_Category %in% c("Overweight", "Obese") ~ "Moderate Risk",
   TRUE ~ "Lower Risk"
-))
+)
 df$Risk_Segment <- factor(df$Risk_Segment,
                           levels = c("Lower Risk", "Moderate Risk", "High Risk"))
 
@@ -741,8 +776,6 @@ for (nm in names(plots_to_save)) {
 ------------------------------------------------------------------------
 
 # 5 Summary of Findings and Conclusions
-
-*(Word count: ≤ 500)*
 
 ------------------------------------------------------------------------
 
