@@ -37,27 +37,6 @@ affect:
 - Sleep Quality
 - Sleep Disorders (Insomnia and Sleep Apnea)
 
----
-
-## Dataset
-
-Dataset Source:
-
-https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset
-
-Dataset contains information about:
-
-- Demographics
-- Sleep duration
-- Sleep quality
-- Physical activity
-- Stress levels
-- BMI category
-- Heart rate
-- Daily steps
-- Sleep disorder status
-
----
 
 ## Project Objectives
 
@@ -174,27 +153,6 @@ Research Findings
 - Sleep quality differs significantly across disorder groups.
 - High-risk populations can be identified using combined BMI and stress profiles.
 - Physical activity positively influences sleep health.
-
----
-
-## Project Structure
-
-├── data/
-│   └── Sleep_health_and_lifestyle_dataset.csv
-
-├── analysis/
-│   └── Sleep_Analysis.Rmd
-
-├── figures/
-│   ├── plot1.png
-│   ├── plot2.png
-│   ├── correlation_heatmap.png
-│   └── dashboard.png
-
-├── report/
-│   └── final_report.pdf
-
-└── README.md
 
 ---
 
