@@ -107,18 +107,14 @@ affect:
 - ggplot2
 - dplyr
 - tidyr
-- scales
-- grid
-- stats
+- nnet
 
 ### Statistical Methods
 
 - Correlation Analysis
 - ANOVA
-- Tukey HSD
 - Chi-Square Test
 - Kruskal-Wallis Test
-- Wilcoxon Post-hoc Test
 - Multiple Linear Regression
 
 ---
