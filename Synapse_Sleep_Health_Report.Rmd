@@ -620,9 +620,9 @@ Residuals      371  293.9    0.79
 
 ```{r chisq-bmi}
 bmi_disorder_tbl <- table(df$BMI_Category, df$Sleep_Disorder)
-chi_res <- chisq.test(bmi_disorder_tbl)
+chi_res <- chisq.test(bmi_disorder_tbl,simulate.p.value = TRUE,B = 10000)
 print(chi_res)
-cat("\nExpected counts (first check: all > 5 for validity):\n")
+cat("\nExpected counts:\n")
 print(round(chi_res$expected, 1))
 ```
 
