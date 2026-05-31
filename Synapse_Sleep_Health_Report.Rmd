@@ -1,16 +1,10 @@
 ---
 title: "Understanding the Relationship Between Lifestyle Habits and Sleep Health"
-subtitle: Team Synapse — Research Project Report
+subtitle: "Team Synapse — Research Project Report"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   pdf_document:
-    latex_engine: lualatex
-  output:
-  pagedown::html_paged:
-    toc: true
-    toc_depth: 3
-    number_sections: false
-    highlight: tango
+    latex_engine: xelatex
   html_document:
     toc: true
     toc_depth: 3
@@ -272,6 +266,9 @@ df$BMI_Category   <- factor(df$BMI_Category,
 df$Stress_Level   <- as.integer(df$Stress_Level)
 df$Gender         <- as.factor(df$Gender)
 df$Occupation     <- as.factor(df$Occupation)
+bp_split <- strsplit(df$Blood_Pressure, "/")
+df$BP_Systolic  <- as.numeric(sapply(bp_split, `[`, 1))
+df$BP_Diastolic <- as.numeric(sapply(bp_split, `[`, 2))
 
 cat("Dataset loaded:", nrow(df), "rows x", ncol(df), "cols\n")
 knitr::kable(as.data.frame(table(df$Sleep_Disorder)),
@@ -281,7 +278,7 @@ knitr::kable(as.data.frame(table(df$Sleep_Disorder)),
 
 ### Expected Output
 
-Running the above chunk loads 374 rows × 13 columns and prints Table 1:
+Running the above chunk loads 374 rows × 15 columns and prints Table 1:
 
 | Disorder    | Count |
 |-------------|-------|
@@ -485,7 +482,7 @@ ggplot(df, aes(x = Sleep_Disorder, y = Quality_of_Sleep,
 
 ------------------------------------------------------------------------
 
-## 3.4 Deeper Exploratory Analysis (New)
+## 3.4 Deeper Exploratory Analysis
 
 ### 3.4.1 Occupation and Gender Interactions with Stress and Sleep
 
@@ -584,7 +581,7 @@ ggplot(risk_pct, aes(x = Risk_Segment, y = Pct, fill = Disorder)) +
 
 ------------------------------------------------------------------------
 
-## 3.5 Statistical Testing (New)
+## 3.5 Statistical Testing
 
 ### 3.5.1 ANOVA — Is Sleep Quality Different Across Disorder Groups?
 
@@ -602,17 +599,17 @@ print(tukey_res)
 **Expected output:**
 
 ```         
-            Df Sum Sq Mean Sq F value   Pr(>F)    
-Sleep_Disorder   2  246.4  123.19   155.5  <2e-16 ***
-Residuals      371  293.9    0.79                   
+                Df Sum Sq Mean Sq F value   Pr(>F)    
+Sleep_Disorder   2   69.2   34.61    27.6 6.69e-12 ***
+Residuals      371  465.2    1.25                     
 
-  Tukey multiple comparisons of means
-    Sleep Apnea-None : diff ≈ -1.88,  p adj < 0.001
-    Insomnia-None    : diff ≈ -1.72,  p adj < 0.001
-    Insomnia-Sleep Apnea : diff ≈  0.16, p adj ≈ 0.21  (not significant)
+Tukey multiple comparisons of means
+  Sleep Apnea-None     : diff = -0.42,  p adj = 0.013
+  Insomnia-None        : diff = -1.09,  p adj < 0.001
+  Insomnia-Sleep Apnea : diff = -0.67,  p adj = 0.001
 ```
 
-**Interpretation:** There are statistically significant differences in sleep quality across disorder groups (F is very large, p \< 2×10⁻¹⁶). Both insomnia and sleep apnea patients have significantly lower sleep quality than disorder-free individuals. The difference *between* the two disorder groups is not significant.
+**Interpretation:** Sleep quality differs significantly across the three disorder groups (F = 27.6, p \< 0.001). Both insomnia and sleep apnea participants reported significantly lower sleep quality than those with no disorder. Notably, the difference between the two disorder groups is also significant (p = 0.001) — insomnia patients had worse sleep quality than sleep apnea patients on average.
 
 ------------------------------------------------------------------------
 
@@ -629,13 +626,13 @@ print(round(chi_res$expected, 1))
 **Expected output:**
 
 ```         
-Pearson's Chi-squared test
+Pearson's Chi-squared test with simulated p-value (based on 10000 replicates)
 
 data:  bmi_disorder_tbl
-X-squared = 228.5,  df = 6,  p-value < 2.2e-16
+X-squared = 246.97, df = NA, p-value = 9.999e-05
 ```
 
-**Interpretation:** The chi-square statistic is 228.5 on 6 degrees of freedom (p \< 2.2×10⁻¹⁶), confirming a highly significant association between BMI category and sleep disorder type. The null hypothesis of independence is firmly rejected.
+**Interpretation:** The chi-square statistic is 246.97 (p \< 0.0001, confirmed via simulation). The association between BMI category and sleep disorder is highly significant. Simulation-based p-values are used here because the "Obese" and "Normal Weight" categories have expected counts below 5, which violates the standard chi-square assumption — the simulated p-value is more reliable in this case.
 
 ------------------------------------------------------------------------
 
@@ -656,19 +653,19 @@ pairwise.wilcox.test(df$Stress_Level, df$Sleep_Disorder,
 Kruskal-Wallis rank sum test
 
 data:  Stress_Level by Sleep_Disorder
-Kruskal-Wallis chi-squared = 61.8, df = 2, p-value = 3.8e-14
+Kruskal-Wallis chi-squared = 10.042, df = 2, p-value = 0.0066
 
 Pairwise comparisons using Wilcoxon rank sum test
-              None    Sleep Apnea
-Sleep Apnea   0.017   -          
-Insomnia      <2e-16  0.023      
+            None    Sleep Apnea
+Sleep Apnea 0.2801  -          
+Insomnia    0.0014  0.7613     
 ```
 
-**Interpretation:** Stress level differences across disorder groups are highly significant (p = 3.8×10⁻¹⁴), well beyond what chance would predict. All three pairwise comparisons are significant after BH correction, with insomnia showing the strongest deviation from the no-disorder group.
+**Interpretation:** Stress level differences across disorder groups are statistically significant overall (p = 0.0066). The pairwise tests show that only the insomnia group differs significantly from the no-disorder group (p = 0.0014). The sleep apnea group does not differ significantly from either other group in stress level — consistent with sleep apnea being driven more by BMI than by stress.
 
 ------------------------------------------------------------------------
 
-## 3.6 Factor Importance Analysis (New)
+## 3.6 Factor Importance Analysis & Modeling
 
 ### 3.6.1 Multiple Linear Regression — Predictors of Sleep Quality
 
@@ -799,21 +796,19 @@ for (nm in names(plots_to_save)) {
 
 ------------------------------------------------------------------------
 
-This project examined 374 individuals from the Sleep Health and Lifestyle Dataset to determine which factors most strongly influence sleep quality and the presence of sleep disorders (insomnia, sleep apnea, or none).
+**Stress and sleep quality.** After examining the plots and running the statistical tests, we observed that participants with higher stress levels generally reported lower sleep quality and shorter sleep duration. Looking at Fig 2, this trend was visible across almost all stress levels in the dataset — as stress went from level 3 to level 8, average sleep quality dropped from 8.97 to 5.86, and sleep duration fell from 8.2 to 6.1 hours. In our regression model, stress had the largest negative coefficient of all the variables we tested. The Kruskal-Wallis test confirmed that stress differed significantly across disorder groups (p = 0.0066), though the pairwise tests showed this effect was mainly driven by the insomnia group — the sleep apnea group did not differ much from disorder-free individuals in terms of stress.
 
-**Stress is the dominant modifiable predictor.** As stress increased from level 3 to 8, average sleep quality fell from 8.97 to 5.86 — a 35% decline — and sleep duration dropped from 8.2 to 6.1 hours. The Kruskal-Wallis test confirmed that stress differences across disorder groups far exceed chance (p = 3.8×10⁻¹⁴). In the multiple regression, stress carried the largest standardised coefficient of all predictors, explaining the greatest share of variance in sleep quality independently of other factors.
+**BMI and sleep disorders.** BMI showed a very strong relationship with sleep disorders in our data. Looking at Fig 3, most participants in the overweight and obese categories were affected by either insomnia or sleep apnea, while a much larger proportion of normal-BMI participants reported no disorder at all. The chi-square test confirmed this was not due to chance (p \< 0.0001). In our multinomial logistic model, BMI had the largest coefficient for both disorder types, which suggests it plays a central role regardless of the other factors.
 
-**BMI acts as a near-binary switch for disorder risk.** Among normal-BMI individuals, 93.8% were disorder-free; among overweight individuals only 12.8% were disorder-free; and 100% of obese individuals had a disorder. The chi-square test (χ² = 228.5, df = 6, p \< 2.2×10⁻¹⁶) confirmed that the BMI–disorder association is not due to chance. In the multinomial logistic model, BMI had large positive coefficients for both disorder types, positioning it as a structural, threshold-like risk factor rather than a continuous gradual one.
+**The two disorders appeared to have different characteristics.** This was one of the more interesting things we noticed during the analysis. Participants with insomnia generally had higher stress levels and the lowest physical activity of any group (mean 46.8 min/day). Sleep apnea, on the other hand, was more strongly associated with BMI — the sleep apnea group actually had the highest physical activity on average (74.8 min/day), yet almost all of them still had a disorder. A possible explanation is that sleep apnea is more physiological in nature, related to body weight and airway structure, while insomnia is more behavioural and stress-driven.
 
-**Insomnia and sleep apnea have distinct driver profiles.** The insomnia group showed the highest stress (mean 5.87) and the lowest physical activity (mean 46.8 min/day), pointing to a stress-and-inactivity driver. In contrast, the sleep apnea group paradoxically had the highest activity (74.8 min/day) yet still had near-universal disorder presence, consistent with sleep apnea being driven primarily by BMI-related airway physiology rather than behavioural factors.
+**Physical activity and daily steps.** After examining the plots, physical activity did appear to differ across groups. However, when we included it alongside stress and BMI in the regression model, its independent effect became much smaller, though it remained statistically significant. Daily steps showed almost no independent effect at all once activity level was already in the model. Our analysis suggests the benefit of physical activity may partly work through reducing stress and weight rather than being a completely separate influence.
 
-**Heart rate has a small but statistically significant positive coefficient** in the MLR (p = 0.037), suggesting a weak independent association. **Age unexpectedly shows a strong positive effect** (β ≈ 0.47 standardised), which may reflect occupational or lifestyle confounding in this sample rather than a true biological effect, and warrants caution in generalisation.
+**One interesting observation — age.** We were somewhat surprised to find that age had a strong positive relationship with sleep quality in our regression model. This was unexpected, as many studies suggest sleep quality tends to decrease with age. A possible explanation could be that the occupations and lifestyles represented in this dataset skew towards working-age adults in relatively stable roles, which may not reflect the wider population. We would be cautious about drawing strong conclusions from this finding without a larger and more diverse sample.
 
-**Physical activity, daily steps, and age show weaker independent effects.** While activity level differs across disorder groups at the bivariate level, its partial regression coefficient becomes non-significant once stress and BMI are held constant, suggesting that the activity–sleep link is partly mediated by these two stronger predictors.
+**Occupation and gender.** After examining Fig 8, nurses and salespersons tended to report the lowest average sleep quality, while engineers and accountants scored noticeably higher. This makes sense given the stress levels typically associated with those jobs. Gender differences within occupations were generally small in our data, though the sample sizes per group were too limited to draw firm conclusions.
 
-**Occupation and gender add nuance.** High-stress occupations (nursing, sales) are associated with lower sleep quality across both genders, whereas sedentary professional roles (engineering, accounting) tend to show better outcomes — a direction worth pursuing in further analysis with a larger, stratified dataset.
-
-**Overall conclusion:** A two-factor risk profile — *high stress + excess BMI* — captures the majority of disorder risk in this dataset. Interventions targeting stress reduction (for insomnia) and weight management (for sleep apnea) are most likely to yield measurable improvements in population sleep health. Future work should include longitudinal data, objective actigraphy measurements, and clinical covariates (medication use, comorbidities) to strengthen causal inference.
+**Overall, our analysis suggests** that stress level and BMI were the two factors most strongly associated with sleep-related problems in this dataset. Individuals with both high stress and higher BMI were more likely to belong to a disorder group. Although this does not prove causation — this is observational cross-sectional data — it points to stress management and weight-related health as the most meaningful areas for intervention. For future work, it would be valuable to use a larger and more representative dataset, and ideally to track individuals over time to better understand how these factors interact with each other.
 
 ------------------------------------------------------------------------
 
