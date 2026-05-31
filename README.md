@@ -184,29 +184,23 @@ Research Findings
 ### Sourab Kumar
 - Stress vs Sleep Quality and Sleep Duration Analysis
 - Plot Analysis and Visualization Interpretation
+- Statistical Testing 
 
 ### Prince Kumar
 - Physical Activity by Sleep Disorder Analysis
 - Data Preprocessing and Data Preparation
+- Statistical Testing 
 
 ### Souptik De
 - BMI vs Sleep Disorder Analysis
 - Interpretation of All Analyses and Findings
+- Factor Importance Analysis & Modelling 
 
 ### Shubhatithi Deb
 - Stress Level by Disorder Group Analysis
 - Planning and Design of the Remaining Project Analysis
+- Deeper Exploratory Analysis 
 
-### Team Synapse
-All members collaboratively contributed to:
-- Research design
-- Dataset understanding
-- Exploratory data analysis
-- Statistical testing
-- Report writing
-- Presentation preparation
-- Final project review
-> Note: Individual contributions listed above correspond to the original research proposal stage. Subsequent analysis, statistical testing, and report development were completed collaboratively by Team Synapse.
 ---
 
 ## License
